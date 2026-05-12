@@ -19,7 +19,28 @@
       color: #ffffff;
     }
 
-    /* Reproductor principal */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      border: none;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: rgba(46, 204, 113, 0.8);
+    }
+
     .player-container {
       background: #000;
       position: relative;
@@ -63,7 +84,6 @@
       margin-top: 4px;
     }
 
-    /* Lista de canales estilo Netflix */
     .channels-container {
       padding: 24px;
       background: #0a0c10;
@@ -156,11 +176,39 @@
       font-weight: 600;
     }
 
-    /* Loading */
     .loading-spinner {
       text-align: center;
       padding: 40px;
       color: #8a8f9e;
+    }
+
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      padding: 12px 20px;
+      border-radius: 10px;
+      background: #1a1d25;
+      border-left: 3px solid;
+      font-size: 13px;
+      animation: slideIn 0.2s ease;
+    }
+    .toast-success { border-left-color: #2ecc71; }
+    .toast-error { border-left-color: #e74c3c; }
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #8a8f9e;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
 
     @media (max-width: 768px) {
@@ -183,6 +231,10 @@
   </style>
 </head>
 <body>
+  <button class="back-btn" onclick="window.location.href='dashboard.html'">
+    <i class="fas fa-arrow-left"></i> Volver al Dashboard
+  </button>
+
   <div class="player-container">
     <div class="video-wrapper" id="videoWrapper">
       <div class="loading-spinner">
@@ -206,70 +258,59 @@
 
   <div id="toastContainer" class="toast-container"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
-    // ========== CANALES PREDEFINIDOS (EDITAR AQUÍ) ==========
+    // ==================== 📺 EDITAR CANALES AQUÍ 📺 ====================
+    // Agrega o modifica canales en este array
+    // Formato:
+    // {
+    //   id: numero,
+    //   name: "Nombre del canal",
+    //   category: "Categoría",
+    //   url: "URL del stream",
+    //   type: "youtube" o "m3u8",
+    //   icon: "emoji"
+    // }
+    
     const channels = [
       {
         id: 1,
-        name: "Carreras Hípicas",
-        category: "Hípica",
-        url: "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0",
-        type: "youtube",
-        icon: "🏇"
-      },
-      {
-  id: 2,  // El siguiente número disponible
-  name: "ESPN 3",
-  category: "Deportes",
-  url: "https://rm8zcvk3.fubohd.com/espn3/mono.m3u8?token=dc825a8320dec287b96603b4d6e1dcd474454fb8-9a-1778646617-1778628617",
-  type: "m3u8",
-  icon: "⚽"
-}
-      {
-        id: 3,
-        name: "Big Buck Bunny 4K",
-        category: "Prueba",
-        url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+        name: "ESPN 3",
+        category: "Deportes",
+        url: "https://rm8zcvk3.fubohd.com/espn3/mono.m3u8?token=dc825a8320dec287b96603b4d6e1dcd474454fb8-9a-1778646617-1778628617",
         type: "m3u8",
-        icon: "🎬"
-      },
-      {
-        id: 4,
-        name: "Bloomberg TV",
-        category: "Noticias",
-        url: "https://bloomberg-bloomberg-1-eu.rakuten.wurl.tv/playlist.m3u8",
-        type: "m3u8",
-        icon: "💰"
-      },
-      {
-        id: 5,
-        name: "Sintel Demo",
-        category: "Prueba",
-        url: "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8",
-        type: "m3u8",
-        icon: "🎥"
-      },
-      {
-        id: 6,
-        name: "Apple Bipbop",
-        category: "Prueba",
-        url: "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_adv_example_hevc/master.m3u8",
-        type: "m3u8",
-        icon: "🍎"
+        icon: "⚽"
       }
+      // 👇 Agrega más canales aquí, separados por comas
+      // {
+      //   id: 2,
+      //   name: "Nuevo Canal",
+      //   category: "Categoría",
+      //   url: "https://ejemplo.com/video.m3u8",
+      //   type: "m3u8",
+      //   icon: "📺"
+      // }
     ];
-
+    
+    // ==================== FIN DE LA EDICIÓN ====================
+    
     let currentChannel = null;
+    let hlsInstance = null;
 
     // Renderizar canales
     function renderChannels() {
       const grid = document.getElementById('channelsGrid');
+      if (!channels.length) {
+        grid.innerHTML = '<div class="empty-state">No hay canales disponibles</div>';
+        return;
+      }
+      
       grid.innerHTML = channels.map(channel => `
         <div class="channel-card ${currentChannel?.id === channel.id ? 'active' : ''}" onclick="playChannel(${channel.id})">
-          <div class="channel-icon">${channel.icon}</div>
+          <div class="channel-icon">${channel.icon || '📺'}</div>
           <div class="channel-info">
-            <div class="channel-title">${channel.name}</div>
-            <div class="channel-tag">${channel.category}</div>
+            <div class="channel-title">${escapeHtml(channel.name)}</div>
+            <div class="channel-tag">${escapeHtml(channel.category) || 'Directo'}</div>
           </div>
           ${channel.type === 'm3u8' ? '<div class="channel-badge">HLS</div>' : ''}
         </div>
@@ -285,10 +326,16 @@
       
       // Actualizar overlay
       document.getElementById('currentChannelName').textContent = channel.name;
-      document.getElementById('currentChannelCategory').textContent = channel.category;
+      document.getElementById('currentChannelCategory').textContent = channel.category || 'En vivo';
       document.getElementById('channelOverlay').style.display = 'block';
       
       const wrapper = document.getElementById('videoWrapper');
+      
+      // Destruir instancia HLS anterior si existe
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
       
       if (channel.type === 'youtube') {
         wrapper.innerHTML = `<iframe src="${channel.url}?autoplay=1&controls=1" allowfullscreen></iframe>`;
@@ -297,9 +344,9 @@
         setTimeout(() => {
           const video = document.getElementById('hlsVideo');
           if (video && Hls && Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(channel.url);
-            hls.attachMedia(video);
+            hlsInstance = new Hls();
+            hlsInstance.loadSource(channel.url);
+            hlsInstance.attachMedia(video);
           } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = channel.url;
           }
@@ -322,10 +369,15 @@
       setTimeout(() => toast.remove(), 3000);
     }
 
-    // Cargar HLS.js
-    const hlsScript = document.createElement('script');
-    hlsScript.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
-    document.head.appendChild(hlsScript);
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
 
     // Inicializar
     renderChannels();
@@ -333,31 +385,5 @@
       playChannel(channels[0].id);
     }
   </script>
-
-  <style>
-    .toast-container {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 1100;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .toast {
-      padding: 12px 20px;
-      border-radius: 10px;
-      background: #1a1d25;
-      border-left: 3px solid;
-      font-size: 13px;
-      animation: slideIn 0.2s ease;
-    }
-    .toast-success { border-left-color: #2ecc71; }
-    .toast-error { border-left-color: #e74c3c; }
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-  </style>
 </body>
 </html>
