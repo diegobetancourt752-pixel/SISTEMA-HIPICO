@@ -66,7 +66,7 @@ const initSocket = () => {
   if (!token) return;
   if (socket) socket.disconnect();
   
-  socket = io('http://localhost:5000', { query: { token } });
+  socket = io(window.location.origin.replace('http', 'ws'), { query: { token } });
   socket.on('recarga_aprobada', (data) => {
     showToast(`Recarga de $${data.amount} aprobada`, 'success');
     const user = getUser();
