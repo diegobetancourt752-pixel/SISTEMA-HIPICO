@@ -27,7 +27,6 @@ const createJornada = async (req, res) => {
       return errorResponse(res, 'No autorizado', 403);
     }
     
-    // ✅ LÍNEA CORREGIDA: ahora incluye total_prize_pool = 0
     const jornadaResult = await client.query(
       `INSERT INTO jornadas (name, closing_date, ticket_cost, total_prize_pool, status) 
        VALUES ($1, $2, $3, 0, 'open') 
@@ -170,7 +169,7 @@ const loadResultados = async (req, res) => {
   }
 };
 
-// ========== LIQUIDAR JORNADA (con puntos por posición) ==========
+// ========== LIQUIDAR JORNADA (con puntos por posición) - CORREGIDO ==========
 const liquidarJornada = async (req, res) => {
   const { id } = req.params;
   const client = await db.pool.connect();
@@ -249,23 +248,30 @@ const liquidarJornada = async (req, res) => {
       
       for (const jugada of mismoAcierto) {
         puntosAsignados.push({
-          jugadaId: jugada.id,
-          userId: jugada.user_id,
-          puntos: puntosPorJugador,
-          aciertos: jugada.aciertos
+          jugadaId: parseInt(jugada.id),
+          userId: parseInt(jugada.user_id),
+          puntos: parseFloat(puntosPorJugador.toFixed(2)),
+          aciertos: parseInt(jugada.aciertos)
         });
         pos++;
       }
       puestoActual++;
     }
     
+    // Insertar puntos en ranking con tipos asegurados
     for (const punto of puntosAsignados) {
+      const userId = parseInt(punto.userId);
+      const jornadaId = parseInt(id);
+      const puntosValor = parseFloat(punto.puntos);
+      
+      console.log(`Insertando ranking: userId=${userId}, jornadaId=${jornadaId}, puntos=${puntosValor}`);
+      
       await client.query(
         `INSERT INTO ranking (user_id, jornada_id, puntos) 
          VALUES ($1, $2, $3)
          ON CONFLICT (user_id, jornada_id) 
          DO UPDATE SET puntos = ranking.puntos + EXCLUDED.puntos`,
-        [punto.userId, id, punto.puntos]
+        [userId, jornadaId, puntosValor]
       );
     }
 
@@ -284,7 +290,11 @@ const liquidarJornada = async (req, res) => {
         const prizePerParticipant = totalShare / grupo.length;
         
         for (const jugada of grupo) {
-          premios.push({ jugadaId: jugada.id, prize: prizePerParticipant, aciertos: jugada.aciertos });
+          premios.push({ 
+            jugadaId: parseInt(jugada.id), 
+            prize: parseFloat(prizePerParticipant), 
+            aciertos: parseInt(jugada.aciertos) 
+          });
         }
         pos += grupo.length;
         puesto++;
@@ -365,7 +375,7 @@ const getPendingReloads = async (req, res) => {
   }
 };
 
-// ========== APROBAR RECARGA (CON NOTIFICACIÓN WEBSOCKET) ==========
+// ========== APROBAR RECARGA ==========
 const approveRecarga = async (req, res) => {
   const { id } = req.params;
   const { comment } = req.body;
@@ -415,7 +425,7 @@ const approveRecarga = async (req, res) => {
   }
 };
 
-// ========== RECHAZAR RECARGA (CON NOTIFICACIÓN WEBSOCKET) ==========
+// ========== RECHAZAR RECARGA ==========
 const rejectRecarga = async (req, res) => {
   const { id } = req.params;
   const { comment } = req.body;
