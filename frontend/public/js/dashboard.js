@@ -256,7 +256,6 @@ async function openApuestaModal(jornada) {
         const costoJornada = Number(jornada.cost_per_bet || jornada.ticket_cost || 5);
         if (modalTotalCost) modalTotalCost.textContent = costoJornada;
         
-        // ✅ CORREGIDO: definir variables antes de usarlas
         const closingDate = new Date(jornada.closing_date || jornada.close_date);
         const fechaCierre = closingDate.toLocaleString();
         const pozoJornada = Number(jornada.total_prize_pool || 0);
@@ -371,7 +370,7 @@ function closeModal() {
     currentSelections = {};
 }
 
-// ========== HISTORIAL ==========
+// ========== HISTORIAL CORREGIDO ==========
 async function loadHistorial() {
     const container = document.getElementById('historialContainer');
     if (!container) return;
@@ -382,10 +381,20 @@ async function loadHistorial() {
             headers: { 'x-auth-token': token }
         });
         const response = await res.json();
-        const jugadas = response.data?.jugadas || response.jugadas || [];
+        let jugadas = [];
+        
+        if (response.data && Array.isArray(response.data.jugadas)) {
+            jugadas = response.data.jugadas;
+        } else if (response.jugadas && Array.isArray(response.jugadas)) {
+            jugadas = response.jugadas;
+        } else if (Array.isArray(response)) {
+            jugadas = response;
+        }
+        
+        console.log('Historial cargado:', jugadas.length);
         
         if (jugadas.length === 0) {
-            container.innerHTML = '<div class="empty-state">No tienes jugadas registradas.</div>';
+            container.innerHTML = '<div class="empty-state">No tienes jugadas registradas. Realiza tu primera apuesta!</div>';
             return;
         }
         
@@ -408,11 +417,25 @@ async function loadHistorial() {
                 statusColor = '#f39c12';
             }
             
-            const fecha = new Date(j.created_at).toLocaleString();
+            let fecha = '-';
+            if (j.created_at) {
+                try {
+                    const fechaObj = new Date(j.created_at);
+                    if (!isNaN(fechaObj.getTime())) {
+                        fecha = fechaObj.toLocaleString();
+                    }
+                } catch(e) {
+                    console.error('Error parsing date:', e);
+                }
+            }
             
-            html += `<tr><td>${j.jornada_name || '-'}</td><td>${selections}</td><td>$${costo}</td><td style="color:${statusColor};">${statusText}</td
-            <td>$${premio}</td
-            <td>${fecha}</td
+            html += `<tr>
+                <td>${j.jornada_name || j.jornada?.name || '-'}</td>
+                <td style="font-family:monospace;">${selections}</td>
+                <td>$${costo}</td>
+                <td style="color:${statusColor};">${statusText}</td>
+                <td>$${premio}</td>
+                <td>${fecha}</td>
             </tr>`;
         }
         
@@ -470,33 +493,45 @@ function setupRecharge() {
     });
 }
 
-// ========== RANKING ==========
+// ========== RANKING CORREGIDO ==========
 async function loadRankingGlobal() {
     const container = document.getElementById('rankingGlobalContainer');
     if (!container) return;
+    
     container.innerHTML = '<div class="loading-spinner">Cargando ranking global...</div>';
     
     try {
         const res = await fetch('/api/ranking/global');
         const response = await res.json();
-        const ranking = response.data || response.ranking || [];
         
-        if (ranking.length === 0) {
-            container.innerHTML = '<div class="empty-state">Aún no hay datos de ranking.</div>';
+        let ranking = [];
+        if (response.data && Array.isArray(response.data)) {
+            ranking = response.data;
+        } else if (response.ranking && Array.isArray(response.ranking)) {
+            ranking = response.ranking;
+        } else if (Array.isArray(response)) {
+            ranking = response;
+        }
+        
+        console.log('Ranking global:', ranking.length);
+        
+        if (!ranking || ranking.length === 0) {
+            container.innerHTML = '<div class="empty-state">Aún no hay datos de ranking. Las jornadas deben ser liquidadas primero.</div>';
             return;
         }
         
         let html = '<div class="ranking-table-wrapper"><table class="ranking-table"><thead><tr><th>Posición</th><th>Jugador</th><th>Puntos</th><th>Premios</th></tr></thead><tbody>';
         
-        ranking.forEach(j => {
-            const posicion = j.posicion === 1 ? '🥇' : (j.posicion === 2 ? '🥈' : (j.posicion === 3 ? '🥉' : `#${j.posicion}`));
+        ranking.forEach((j, index) => {
+            const posicion = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `#${index + 1}`));
             const puntos = Number(j.total_puntos || j.puntos || 0);
             const premios = Number(j.total_premios || j.premio || 0);
             
-            html += `<tr><td class="posicion">${posicion}</td
-            <td>${j.username}</td
-            <td class="puntos">${puntos} pts</td
-            <td class="premio">$${premios.toFixed(2)}</td
+            html += `<tr>
+                <td class="posicion">${posicion}</td>
+                <td>${j.username || j.user_name || 'Anónimo'}</td>
+                <td class="puntos">${puntos} pts</td
+                <td class="premio">$${premios.toFixed(2)}</td
             </tr>`;
         });
         
@@ -548,14 +583,15 @@ async function loadRankingPorJornada(jornadaId) {
         
         let html = '<div class="ranking-table-wrapper"><table class="ranking-table"><thead><tr><th>Posición</th><th>Jugador</th><th>Puntos</th><th>Premio</th></tr></thead><tbody>';
         
-        ranking.forEach(j => {
-            const posicion = j.posicion === 1 ? '🥇' : (j.posicion === 2 ? '🥈' : (j.posicion === 3 ? '🥉' : `#${j.posicion}`));
+        ranking.forEach((j, index) => {
+            const posicion = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `#${index + 1}`));
             const premio = Number(j.premio || 0);
             
-            html += `<tr><td class="posicion">${posicion}</td
-            <td>${j.username}</td
-            <td class="puntos">${j.puntos} pts</td
-            <td class="premio">$${premio.toFixed(2)}</td
+            html += `<tr>
+                <td class="posicion">${posicion}</td>
+                <td>${j.username}</td>
+                <td class="puntos">${j.puntos} pts</td
+                <td class="premio">$${premio.toFixed(2)}</td
             </tr>`;
         });
         
