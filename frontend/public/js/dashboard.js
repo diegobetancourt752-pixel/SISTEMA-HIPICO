@@ -1,6 +1,4 @@
-// ========== DASHBOARD.JS - COMPLETO Y CORREGIDO ==========
-// NOTA: Las funciones formatBalance, showToast, apiFetch, getToken, getUser, 
-// saveSession, clearSession, initSocket ya están definidas en common.js
+// ========== DASHBOARD.JS - COMPLETO CORREGIDO CON ACIERTOS ==========
 
 let selectedJornada = null;
 let currentSelections = {};
@@ -35,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof initSocket === 'function') initSocket();
 });
 
-// ========== WEBSOCKET CORREGIDO ==========
+// ========== WEBSOCKET ==========
 (function initWebSocket() {
     const authToken = localStorage.getItem('pollaToken');
     const currentUser = JSON.parse(localStorage.getItem('pollaUser') || '{}');
@@ -370,7 +368,7 @@ function closeModal() {
     currentSelections = {};
 }
 
-// ========== HISTORIAL CON ACIERTOS ==========
+// ========== HISTORIAL CON ACIERTOS MEJORADO ==========
 async function loadHistorial() {
     const container = document.getElementById('historialContainer');
     if (!container) return;
@@ -398,33 +396,59 @@ async function loadHistorial() {
             return;
         }
         
-        let html = '<div class="historial-table-container"><table class="historial-table"><thead><tr><th>Jornada</th><th>Selecciones</th><th>Aciertos</th><th>Costo</th><th>Estado</th><th>Premio</th><th>Fecha</th></tr></thead><tbody>';
+        let html = `
+            <div class="historial-table-container">
+                <table class="historial-table">
+                    <thead>
+                        <tr>
+                            <th>Jornada</th>
+                            <th>Selecciones</th>
+                            <th>Aciertos</th>
+                            <th>Costo</th>
+                            <th>Estado</th>
+                            <th>Premio</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
         
         for (const j of jugadas) {
             const selections = Array.isArray(j.selections) ? j.selections.join(' - ') : (j.selections || '-');
             const costo = Number(j.cost || 0).toFixed(2);
             const premio = Number(j.prize || 0).toFixed(2);
-            let statusText = '', statusColor = '';
             
-            // Mostrar aciertos
-            let aciertosTexto = '-';
-            if (j.aciertos !== undefined && j.aciertos !== null) {
-                const totalValidas = j.total_validas || 5;
-                aciertosTexto = `${j.aciertos}/${totalValidas}`;
-            }
+            // Calcular aciertos
+            const aciertos = j.aciertos || 0;
+            const totalValidas = j.total_validas || 5;
+            const porcentajeAciertos = Math.round((aciertos / totalValidas) * 100);
+            
+            // Determinar estado según aciertos
+            let statusText = '';
+            let statusColor = '';
             
             if (j.status === 'won') {
-                statusText = 'Ganó';
+                statusText = '🏆 Ganó';
                 statusColor = '#2ecc71';
             } else if (j.status === 'lost') {
-                statusText = 'Perdió';
+                statusText = '❌ Perdió';
                 statusColor = '#e74c3c';
-            } else if (j.status === 'pending' && j.aciertos > 0) {
-                statusText = `${j.aciertos} acierto(s)`;
+            } else if (j.status === 'pending' && aciertos > 0) {
+                statusText = `⏳ ${aciertos}/${totalValidas} aciertos - Pendiente`;
                 statusColor = '#3498db';
             } else {
-                statusText = 'Pendiente';
+                statusText = '⏳ Pendiente';
                 statusColor = '#f39c12';
+            }
+            
+            // Barra de progreso de aciertos
+            let barraAciertos = '';
+            if (aciertos > 0) {
+                barraAciertos = `
+                    <div style="width:100%; background:#2a2d35; border-radius:10px; margin-top:5px; overflow:hidden;">
+                        <div style="width:${porcentajeAciertos}%; background:${statusColor}; height:4px; border-radius:10px;"></div>
+                    </div>
+                `;
             }
             
             let fecha = '-';
@@ -439,18 +463,29 @@ async function loadHistorial() {
                 }
             }
             
-            html += `<tr>
-                <td>${j.jornada_name || j.jornada?.name || '-'}</td>
-                <td style="font-family:monospace;">${selections}</td>
-                <td style="font-weight:600;">${aciertosTexto}</td>
-                <td>$${costo}</td>
-                <td style="color:${statusColor}; font-weight:600;">${statusText}</td>
-                <td>$${premio}</td>
-                <td>${fecha}</td>
-            </tr>`;
+            html += `
+                <tr>
+                    <td><strong>${j.jornada_name || j.jornada?.name || '-'}</strong></td>
+                    <td style="font-family:monospace; font-size:13px;">${selections}</td>
+                    <td style="min-width:100px;">
+                        <span style="font-weight:700; font-size:16px;">${aciertos}/${totalValidas}</span>
+                        <span style="color:#8a8f9e; font-size:11px;"> (${porcentajeAciertos}%)</span>
+                        ${barraAciertos}
+                    </td>
+                    <td>$${costo}</td>
+                    <td style="color:${statusColor}; font-weight:600;">${statusText}</td>
+                    <td style="color:#2ecc71; font-weight:700;">$${premio}</td>
+                    <td style="font-size:12px; color:#8a8f9e;">${fecha}</td>
+                </tr>
+            `;
         }
         
-        html += '</tbody></table></div>';
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
         container.innerHTML = html;
     } catch (error) {
         console.error('Error loadHistorial:', error);
@@ -541,8 +576,8 @@ async function loadRankingGlobal() {
             html += `<tr>
                 <td class="posicion">${posicion}</td>
                 <td>${j.username || j.user_name || 'Anónimo'}</td>
-                <td class="puntos">${puntos} pts</td
-                <td class="premio">$${premios.toFixed(2)}</td
+                <td class="puntos">${puntos} pts</td>
+                <td class="premio">$${premios.toFixed(2)}</td>
             </tr>`;
         });
         
@@ -601,8 +636,8 @@ async function loadRankingPorJornada(jornadaId) {
             html += `<tr>
                 <td class="posicion">${posicion}</td>
                 <td>${j.username}</td>
-                <td class="puntos">${j.puntos} pts</td
-                <td class="premio">$${premio.toFixed(2)}</td
+                <td class="puntos">${j.puntos} pts</td>
+                <td class="premio">$${premio.toFixed(2)}</td>
             </tr>`;
         });
         

@@ -163,7 +163,7 @@ const loadResultados = async (req, res) => {
   }
 };
 
-// ========== LIQUIDAR JORNADA ==========
+// ========== LIQUIDAR JORNADA CON ACIERTOS ==========
 const liquidarJornada = async (req, res) => {
   const { id } = req.params;
   const client = await db.pool.connect();
@@ -317,7 +317,9 @@ const liquidarJornada = async (req, res) => {
       const aciertosJugada = resultados.find(r => r.id === jugada.id)?.aciertos || 0;
       
       await client.query(
-        `UPDATE jugadas SET status = $1, prize = $2, aciertos = $3, total_validas = $4 WHERE id = $5`,
+        `UPDATE jugadas 
+         SET status = $1, prize = $2, aciertos = $3, total_validas = $4 
+         WHERE id = $5`,
         [status, prize, aciertosJugada, totalValidas, jugada.id]
       );
       
