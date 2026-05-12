@@ -7,14 +7,9 @@ const Carrera = require('../models/Carrera');
 const Jugada = require('../models/Jugada');
 const Recarga = require('../models/Recarga');
 
-// ========== CREAR JORNADA (con válidas y números) ==========
+// ========== CREAR JORNADA ==========
 const createJornada = async (req, res) => {
-  const { 
-    name, 
-    closing_date, 
-    ticket_cost, 
-    validas
-  } = req.body;
+  const { name, closing_date, ticket_cost, validas } = req.body;
   
   console.log('Debug createJornada payload:', { name, closing_date, ticket_cost, validas });
   
@@ -142,8 +137,7 @@ const loadResultados = async (req, res) => {
       }
       
       const participantResult = await client.query(
-        `SELECT id FROM participantes 
-         WHERE carrera_id = $1 AND numero = $2`,
+        `SELECT id FROM participantes WHERE carrera_id = $1 AND numero = $2`,
         [resultado.carreraId, resultado.winnerNumero]
       );
       
@@ -169,7 +163,7 @@ const loadResultados = async (req, res) => {
   }
 };
 
-// ========== LIQUIDAR JORNADA (con puntos por posición) - CORREGIDO ==========
+// ========== LIQUIDAR JORNADA ==========
 const liquidarJornada = async (req, res) => {
   const { id } = req.params;
   const client = await db.pool.connect();
@@ -190,6 +184,7 @@ const liquidarJornada = async (req, res) => {
 
     const carreras = await Carrera.getByJornada(id);
     const ganadores = [];
+    const totalValidas = carreras.length;
     
     for (const carrera of carreras) {
       if (!carrera.winner_participant_id) {
@@ -258,7 +253,6 @@ const liquidarJornada = async (req, res) => {
       puestoActual++;
     }
     
-    // Insertar puntos en ranking con tipos asegurados
     for (const punto of puntosAsignados) {
       const userId = parseInt(punto.userId);
       const jornadaId = parseInt(id);
@@ -316,11 +310,16 @@ const liquidarJornada = async (req, res) => {
       );
     }
 
+    // Actualizar jugadas con aciertos y total_validas
     for (const jugada of jugadasActivas) {
       const prize = prizeMap[jugada.id] || 0;
       const status = prize > 0 ? 'won' : 'lost';
+      const aciertosJugada = resultados.find(r => r.id === jugada.id)?.aciertos || 0;
       
-      await Jugada.updateStatusAndPrize(jugada.id, status, prize, client);
+      await client.query(
+        `UPDATE jugadas SET status = $1, prize = $2, aciertos = $3, total_validas = $4 WHERE id = $5`,
+        [status, prize, aciertosJugada, totalValidas, jugada.id]
+      );
       
       if (prize > 0) {
         await client.query(

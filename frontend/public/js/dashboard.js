@@ -370,7 +370,7 @@ function closeModal() {
     currentSelections = {};
 }
 
-// ========== HISTORIAL CORREGIDO ==========
+// ========== HISTORIAL CON ACIERTOS ==========
 async function loadHistorial() {
     const container = document.getElementById('historialContainer');
     if (!container) return;
@@ -398,7 +398,7 @@ async function loadHistorial() {
             return;
         }
         
-        let html = '<div class="historial-table-container"><table class="historial-table"><thead><tr><th>Jornada</th><th>Selecciones</th><th>Costo</th><th>Estado</th><th>Premio</th><th>Fecha</th></tr></thead><tbody>';
+        let html = '<div class="historial-table-container"><table class="historial-table"><thead><tr><th>Jornada</th><th>Selecciones</th><th>Aciertos</th><th>Costo</th><th>Estado</th><th>Premio</th><th>Fecha</th></tr></thead><tbody>';
         
         for (const j of jugadas) {
             const selections = Array.isArray(j.selections) ? j.selections.join(' - ') : (j.selections || '-');
@@ -406,12 +406,22 @@ async function loadHistorial() {
             const premio = Number(j.prize || 0).toFixed(2);
             let statusText = '', statusColor = '';
             
+            // Mostrar aciertos
+            let aciertosTexto = '-';
+            if (j.aciertos !== undefined && j.aciertos !== null) {
+                const totalValidas = j.total_validas || 5;
+                aciertosTexto = `${j.aciertos}/${totalValidas}`;
+            }
+            
             if (j.status === 'won') {
                 statusText = 'Ganó';
                 statusColor = '#2ecc71';
             } else if (j.status === 'lost') {
                 statusText = 'Perdió';
                 statusColor = '#e74c3c';
+            } else if (j.status === 'pending' && j.aciertos > 0) {
+                statusText = `${j.aciertos} acierto(s)`;
+                statusColor = '#3498db';
             } else {
                 statusText = 'Pendiente';
                 statusColor = '#f39c12';
@@ -432,8 +442,9 @@ async function loadHistorial() {
             html += `<tr>
                 <td>${j.jornada_name || j.jornada?.name || '-'}</td>
                 <td style="font-family:monospace;">${selections}</td>
+                <td style="font-weight:600;">${aciertosTexto}</td>
                 <td>$${costo}</td>
-                <td style="color:${statusColor};">${statusText}</td>
+                <td style="color:${statusColor}; font-weight:600;">${statusText}</td>
                 <td>$${premio}</td>
                 <td>${fecha}</td>
             </tr>`;
@@ -493,7 +504,7 @@ function setupRecharge() {
     });
 }
 
-// ========== RANKING CORREGIDO ==========
+// ========== RANKING ==========
 async function loadRankingGlobal() {
     const container = document.getElementById('rankingGlobalContainer');
     if (!container) return;
