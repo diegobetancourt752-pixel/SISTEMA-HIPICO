@@ -1,0 +1,27 @@
+<div class="modal hidden" id="rechargeModal">
+  <div class="modal-header">
+    <h3>Recargar Saldo</h3>
+    <button class="close-modal" data-close>&times;</button>
+  </div>
+  <div class="modal-body">
+    <form id="rechargeForm" class="form-grid">
+      <label>
+        <span>Monto</span>
+        <input type="number" id="rechargeAmount" min="1" value="50" required />
+      </label>
+      <label>
+        <span>Método de pago</span>
+        <select id="rechargeMethod" required>
+          <option value="Pago Móvil">Pago Móvil</option>
+          <option value="Transferencia">Transferencia</option>
+        </select>
+      </label>
+      <label>
+        <span>Comprobante</span>
+        <input type="text" id="rechargeReference" placeholder="Número de referencia" required />
+      </label>
+      <p class="hint">El administrador verificará y aprobará manualmente.</p>
+      <button type="submit" class="button button-primary">Solicitar Recarga</button>
+    </form>
+  </div>
+</div>

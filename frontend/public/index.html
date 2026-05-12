@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Polla Hípica - Siente la emoción, vive la victoria</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* ========== CSS OPTIMIZADO - SIN ANIMACIONES PESADAS ========== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0a0c10 0%, #1a1d25 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Fondo simplificado (sin animación) */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 50%, rgba(46, 204, 113, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .login-container {
+      max-width: 1300px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 60px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Columna Izquierda */
+    .hero {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+      box-shadow: 0 10px 30px rgba(46, 204, 113, 0.2);
+    }
+
+    .logo i {
+      font-size: 40px;
+      color: white;
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #ffffff 0%, #2ecc71 60%, #3498db 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, #2ecc71, #f1c40f);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      font-weight: 600;
+      color: #2ecc71;
+      margin-bottom: 24px;
+    }
+
+    .description {
+      color: #8a8f9e;
+      margin-bottom: 40px;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2ecc71;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #5a5f6e;
+      margin-top: 5px;
+    }
+
+    /* Columna Derecha */
+    .form-box {
+      flex: 0.8;
+      min-width: 340px;
+      background: rgba(26, 29, 37, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 32px;
+      padding: 40px;
+      border: 1px solid rgba(46, 204, 113, 0.2);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-box h2 {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff, #2ecc71);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .form-box p {
+      text-align: center;
+      color: #8a8f9e;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px 18px;
+      background: #0a0c10;
+      border: 1px solid #2a2d35;
+      border-radius: 14px;
+      color: white;
+      font-size: 15px;
+      margin-bottom: 16px;
+      transition: all 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #2ecc71;
+    }
+
+    input::placeholder {
+      color: #5a5f6e;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 16px 0;
+      font-size: 13px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #8a8f9e;
+      cursor: pointer;
+    }
+
+    .checkbox input {
+      width: auto;
+      margin: 0;
+      accent-color: #2ecc71;
+    }
+
+    .forgot {
+      color: #8a8f9e;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .forgot:hover {
+      color: #2ecc71;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      color: #0a0c10;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #27ae60, #2ecc71);
+      transform: translateY(-1px);
+    }
+
+    .register-link {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #2a2d35;
+    }
+
+    .register-link a {
+      color: #2ecc71;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .register-link a:hover {
+      color: #27ae60;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #authMessage {
+      margin-bottom: 16px;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    #authMessage.error {
+      background: rgba(231, 76, 60, 0.1);
+      color: #e74c3c;
+    }
+
+    #authMessage.success {
+      background: rgba(46, 204, 113, 0.1);
+      color: #2ecc71;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .login-container {
+        flex-direction: column;
+        text-align: center;
+        gap: 30px;
+      }
+      
+      .logo {
+        margin: 0 auto 30px auto;
+      }
+      
+      h1 {
+        font-size: 36px;
+      }
+      
+      .hero-stats {
+        justify-content: center;
+      }
+      
+      .form-box {
+        padding: 30px;
+        min-width: auto;
+        width: 100%;
+      }
+      
+      .subtitle {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 28px;
+      }
+      
+      .stat-number {
+        font-size: 22px;
+      }
+      
+      .form-box h2 {
+        font-size: 24px;
+      }
+      
+      input {
+        padding: 14px;
+      }
+      
+      button {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <!-- Columna Izquierda -->
+    <div class="hero">
+      <div class="logo">
+        <i class="fas fa-horse-head"></i>
+      </div>
+      <h1>Siente la <span>Emoción</span><br>Vive la <span>Victoria</span></h1>
+      <p class="subtitle">Polla Hípica</p>
+      <p class="description">La plataforma líder de apuestas hípicas en Venezuela.<br>La suerte te espera en cada carrera.</p>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-number">+50K</div>
+          <div class="stat-label">Apostadores activos</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">$1M+</div>
+          <div class="stat-label">En premios</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">24/7</div>
+          <div class="stat-label">Atención al cliente</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna Derecha -->
+    <div class="form-box">
+      <form id="loginForm">
+        <h2>Bienvenido</h2>
+        <p>Inicia sesión para comenzar a apostar</p>
+        <div id="authMessage"></div>
+        <input type="email" id="loginEmail" placeholder="Correo electrónico" required>
+        <input type="password" id="loginPassword" placeholder="Contraseña" required>
+        <div class="row">
+          <label class="checkbox">
+            <input type="checkbox" id="rememberMe"> Recuérdame
+          </label>
+          <a href="#" class="forgot">¿Olvidaste tu contraseña?</a>
+        </div>
+        <button type="submit">Ingresar</button>
+      </form>
+
+      <div class="register-link">
+        <p>¿No tienes cuenta? <a href="#" id="showRegisterBtn">Regístrate ahora</a></p>
+      </div>
+
+      <form id="registerForm" class="hidden">
+        <h2>Crear cuenta</h2>
+        <p>Comienza a ganar hoy mismo</p>
+        <input type="text" id="registerUsername" placeholder="Nombre de usuario" required>
+        <input type="email" id="registerEmail" placeholder="Correo electrónico" required>
+        <input type="password" id="registerPassword" placeholder="Contraseña" required>
+        <button type="submit">Registrarse</button>
+        <div class="register-link">
+          <p><a href="#" id="showLoginBtn">← Volver al inicio de sesión</a></p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/auth.js"></script>
+
+  <script>
+    // Toggle entre login y registro
+    document.getElementById('showRegisterBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('registerForm').classList.remove('hidden');
+    });
+    document.getElementById('showLoginBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('registerForm').classList.add('hidden');
+      document.getElementById('loginForm').classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>
