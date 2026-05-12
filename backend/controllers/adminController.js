@@ -1,4 +1,4 @@
-// ========== ADMIN CONTROLLER - COMPLETO ==========
+// ========== ADMIN CONTROLLER - COMPLETO CORREGIDO ==========
 
 const db = require('../config/db');
 const { successResponse, errorResponse } = require('../utils/responses');
@@ -27,9 +27,10 @@ const createJornada = async (req, res) => {
       return errorResponse(res, 'No autorizado', 403);
     }
     
+    // ✅ LÍNEA CORREGIDA: ahora incluye total_prize_pool = 0
     const jornadaResult = await client.query(
-      `INSERT INTO jornadas (name, closing_date, ticket_cost, status) 
-       VALUES ($1, $2, $3, 'open') 
+      `INSERT INTO jornadas (name, closing_date, ticket_cost, total_prize_pool, status) 
+       VALUES ($1, $2, $3, 0, 'open') 
        RETURNING *`,
       [name, closing_date, ticket_cost]
     );
@@ -229,7 +230,6 @@ const liquidarJornada = async (req, res) => {
       return { ...jugada, aciertos };
     });
 
-    // ========== PUNTOS POR POSICIÓN ==========
     const sorted = [...resultados].sort((a, b) => b.aciertos - a.aciertos);
     
     const puntosPorPosicion = [
@@ -269,7 +269,6 @@ const liquidarJornada = async (req, res) => {
       );
     }
 
-    // ========== PREMIOS ==========
     const distribution = [0.60, 0.25, 0.15];
     const premios = [];
     
@@ -399,11 +398,10 @@ const approveRecarga = async (req, res) => {
 
     await client.query('COMMIT');
     
-    // ========== NOTIFICAR AL USUARIO VÍA WEBSOCKET ==========
     const io = req.app.get('io');
     console.log(`✅ Notificando a user_${recarga.user_id} recarga de $${recarga.amount}`);
     io.to(`user_${recarga.user_id}`).emit('recarga_aprobada', { 
-      amount: recarga.amount,
+      amount: parseFloat(recarga.amount),
       nuevo_balance: recarga.amount
     });
     
@@ -428,7 +426,6 @@ const rejectRecarga = async (req, res) => {
       return errorResponse(res, 'Recarga no encontrada', 404);
     }
     
-    // Notificar al usuario
     const io = req.app.get('io');
     console.log(`❌ Notificando a user_${recarga.user_id} que su recarga fue rechazada`);
     io.to(`user_${recarga.user_id}`).emit('recarga_rechazada', { 
@@ -442,13 +439,13 @@ const rejectRecarga = async (req, res) => {
     return errorResponse(res, 'No se pudo rechazar la recarga', 500, error.message);
   }
 };
+
 // ========== ELIMINAR JORNADA ==========
 const deleteJornada = async (req, res) => {
     const { id } = req.params;
     const client = await db.pool.connect();
     
     try {
-        // Verificar si hay apuestas
         const apuestasResult = await client.query(
             'SELECT COUNT(*) FROM jugadas WHERE jornada_id = $1',
             [id]
