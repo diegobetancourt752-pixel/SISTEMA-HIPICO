@@ -33,69 +33,74 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Login
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
 
-        try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
 
-            const data = await response.json();
+        const result = await response.json();
+        console.log('Respuesta login:', result);
 
-            if (response.ok && data.token) {
-                localStorage.setItem('pollaToken', data.token);
-                localStorage.setItem('pollaUser', JSON.stringify(data.user));
-                
-                if (data.user.role === 'admin') {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'dashboard.html';
-                }
+        if (response.ok && result.success && result.data) {
+            const { token, user } = result.data;
+            
+            localStorage.setItem('pollaToken', token);
+            localStorage.setItem('pollaUser', JSON.stringify(user));
+            
+            if (user.role === 'admin') {
+                window.location.href = 'admin.html';
             } else {
-                alert(data.message || 'Error al iniciar sesión');
+                window.location.href = 'dashboard.html';
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error de conexión con el servidor');
+        } else {
+            alert(result.message || 'Error al iniciar sesión');
         }
-    });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión con el servidor');
+    }
+});
 
-    // Registro
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = document.getElementById('registerUsername').value;
-        const email = document.getElementById('registerEmail').value;
-        const password = document.getElementById('registerPassword').value;
+// Registro
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('registerUsername').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
 
-        try {
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password })
-            });
+    try {
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
 
-            const data = await response.json();
+        const result = await response.json();
+        console.log('Respuesta registro:', result);
 
-            if (response.ok && data.token) {
-                localStorage.setItem('pollaToken', data.token);
-                localStorage.setItem('pollaUser', JSON.stringify(data.user));
-                
-                if (data.user.role === 'admin') {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'dashboard.html';
-                }
+        if (response.ok && result.success && result.data) {
+            const { token, user } = result.data;
+            
+            localStorage.setItem('pollaToken', token);
+            localStorage.setItem('pollaUser', JSON.stringify(user));
+            
+            if (user.role === 'admin') {
+                window.location.href = 'admin.html';
             } else {
-                alert(data.message || 'Error al registrarse');
+                window.location.href = 'dashboard.html';
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error de conexión con el servidor');
+        } else {
+            alert(result.message || 'Error al registrarse');
         }
-    });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión con el servidor');
+    }
 });
