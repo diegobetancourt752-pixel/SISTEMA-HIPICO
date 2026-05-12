@@ -33,74 +33,75 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Login
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
 
-    try {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
 
-        const result = await response.json();
-        console.log('Respuesta login:', result);
+            const result = await response.json();
+            console.log('Respuesta login:', result);
 
-        if (response.ok && result.success && result.data) {
-            const { token, user } = result.data;
-            
-            localStorage.setItem('pollaToken', token);
-            localStorage.setItem('pollaUser', JSON.stringify(user));
-            
-            if (user.role === 'admin') {
-                window.location.href = 'admin.html';
+            if (response.ok && result.success && result.data) {
+                const { token, user } = result.data;
+                
+                localStorage.setItem('pollaToken', token);
+                localStorage.setItem('pollaUser', JSON.stringify(user));
+                
+                if (user.role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
             } else {
-                window.location.href = 'dashboard.html';
+                alert(result.message || 'Error al iniciar sesión');
             }
-        } else {
-            alert(result.message || 'Error al iniciar sesión');
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error de conexión con el servidor');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error de conexión con el servidor');
-    }
-});
+    });
 
-// Registro
-document.getElementById('registerForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('registerUsername').value;
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
+    // Registro
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('registerUsername').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
 
-    try {
-        const response = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password })
-        });
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+            });
 
-        const result = await response.json();
-        console.log('Respuesta registro:', result);
+            const result = await response.json();
+            console.log('Respuesta registro:', result);
 
-        if (response.ok && result.success && result.data) {
-            const { token, user } = result.data;
-            
-            localStorage.setItem('pollaToken', token);
-            localStorage.setItem('pollaUser', JSON.stringify(user));
-            
-            if (user.role === 'admin') {
-                window.location.href = 'admin.html';
+            if (response.ok && result.success && result.data) {
+                const { token, user } = result.data;
+                
+                localStorage.setItem('pollaToken', token);
+                localStorage.setItem('pollaUser', JSON.stringify(user));
+                
+                if (user.role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
             } else {
-                window.location.href = 'dashboard.html';
+                alert(result.message || 'Error al registrarse');
             }
-        } else {
-            alert(result.message || 'Error al registrarse');
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error de conexión con el servidor');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error de conexión con el servidor');
-    }
+    });
 });
