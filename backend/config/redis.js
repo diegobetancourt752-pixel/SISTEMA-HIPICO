@@ -4,7 +4,13 @@ let redisClient = null;
 
 async function initRedis() {
     try {
-        redisClient = redis.createClient({ url: process.env.REDIS_URL });
+        const redisUrl = process.env.REDIS_URL;
+        if (!redisUrl) {
+            console.warn('⚠️ REDIS_URL no configurada');
+            return null;
+        }
+        
+        redisClient = redis.createClient({ url: redisUrl });
         redisClient.on('connect', () => console.log('✅ Redis conectado'));
         redisClient.on('error', (err) => console.error('❌ Redis error:', err.message));
         await redisClient.connect();
