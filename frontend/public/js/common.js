@@ -48,7 +48,6 @@ const apiFetch = async (url, options = {}) => {
   if (response.status === 401) {
     clearSession();
     showToast('Sesión expirada', 'error');
-    // Redirigir al login en lugar de recargar la página para evitar bucles
     window.location.href = 'index.html';
     throw new Error('Unauthorized');
   }
@@ -67,15 +66,40 @@ const initSocket = () => {
   if (socket) socket.disconnect();
   
   socket = io(window.location.origin.replace('http', 'ws'), { query: { token } });
+  
   socket.on('recarga_aprobada', (data) => {
-    showToast(`Recarga de $${data.amount} aprobada`, 'success');
+    console.log('📥 Recarga recibida:', data);
+    
+    // Asegurar que amount sea número
+    let amount = data.amount;
+    if (typeof amount === 'string') {
+      amount = parseFloat(amount);
+    }
+    
+    if (isNaN(amount) || amount <= 0) {
+      console.error('❌ Amount inválido:', amount);
+      showToast('Error: Monto de recarga inválido', 'error');
+      return;
+    }
+    
+    showToast(`Recarga de $${amount.toFixed(2)} aprobada`, 'success');
+    
     const user = getUser();
     if (user) {
-      user.balance = (user.balance || 0) + data.amount;
+      const balanceActual = typeof user.balance === 'number' ? user.balance : (parseFloat(user.balance) || 0);
+      user.balance = balanceActual + amount;
+      
+      console.log('💰 Nuevo balance:', user.balance);
+      
       localStorage.setItem('pollaUser', JSON.stringify(user));
+      
       const balanceEl = document.getElementById('userBalance');
-      if (balanceEl) balanceEl.textContent = `$${formatBalance(user.balance)}`;
+      if (balanceEl) {
+        balanceEl.textContent = `$${formatBalance(user.balance)}`;
+      }
     }
   });
-  socket.on('connect', () => console.log('WebSocket conectado'));
+  
+  socket.on('connect', () => console.log('✅ WebSocket conectado'));
+  socket.on('connect_error', (err) => console.error('❌ WebSocket error:', err.message));
 };
