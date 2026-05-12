@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentUser = JSON.parse(localStorage.getItem('pollaUser') || '{}');
     
     if (authToken && currentUser.id && !window.socket) {
-        // Usar la URL actual del navegador, no localhost
         const wsUrl = window.location.origin.replace('http', 'ws');
         console.log('Conectando WebSocket a:', wsUrl);
         
@@ -60,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof showToast === 'function') showToast(`Recarga de $${data.amount} aprobada`, 'success');
             
             const userData = JSON.parse(localStorage.getItem('pollaUser') || '{}');
-            userData.balance = (userData.balance || 0) + data.amount;
+            userData.balance = (userData.balance || 0) + Number(data.amount);
             localStorage.setItem('pollaUser', JSON.stringify(userData));
             
             const balanceEl = document.getElementById('userBalance');
@@ -254,13 +253,19 @@ async function openApuestaModal(jornada) {
         const modalJornadaInfo = document.getElementById('modalJornadaInfo');
         
         if (modalTitle) modalTitle.textContent = jornada.name;
-        if (modalTotalCost) modalTotalCost.textContent = jornada.cost_per_bet || jornada.ticket_cost;
+        const costoJornada = Number(jornada.cost_per_bet || jornada.ticket_cost || 5);
+        if (modalTotalCost) modalTotalCost.textContent = costoJornada;
+        
+        // ✅ CORREGIDO: definir variables antes de usarlas
+        const closingDate = new Date(jornada.closing_date || jornada.close_date);
+        const fechaCierre = closingDate.toLocaleString();
+        const pozoJornada = Number(jornada.total_prize_pool || 0);
         
         if (modalJornadaInfo) {
             modalJornadaInfo.innerHTML = `
-                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Cierre</span><span class="modal-jornada-value">${fechaFormateada}</span></div>
-                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Costo por jugada</span><span class="modal-jornada-value">$${costo.toFixed(2)}</span></div>
-                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Pozo acumulado</span><span class="modal-jornada-value">$${pozo.toFixed(2)}</span></div>
+                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Cierre</span><span class="modal-jornada-value">${fechaCierre}</span></div>
+                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Costo por jugada</span><span class="modal-jornada-value">$${costoJornada.toFixed(2)}</span></div>
+                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Pozo acumulado</span><span class="modal-jornada-value">$${pozoJornada.toFixed(2)}</span></div>
             `;
         }
         
@@ -405,7 +410,10 @@ async function loadHistorial() {
             
             const fecha = new Date(j.created_at).toLocaleString();
             
-            html += `<tr><td>${j.jornada_name || '-'}</td><td>${selections}</td><td>$${costo}</td><td style="color:${statusColor};">${statusText}</td><td>$${premio}</td><td>${fecha}</td></tr>`;
+            html += `<tr><td>${j.jornada_name || '-'}</td><td>${selections}</td><td>$${costo}</td><td style="color:${statusColor};">${statusText}</td
+            <td>$${premio}</td
+            <td>${fecha}</td
+            </tr>`;
         }
         
         html += '</tbody></table></div>';
@@ -485,7 +493,11 @@ async function loadRankingGlobal() {
             const puntos = Number(j.total_puntos || j.puntos || 0);
             const premios = Number(j.total_premios || j.premio || 0);
             
-            html += `<tr><td class="posicion">${posicion}</td><td>${j.username}</td><td class="puntos">${puntos} pts</td><td class="premio">$${premios.toFixed(2)}</td></tr>`;
+            html += `<tr><td class="posicion">${posicion}</td
+            <td>${j.username}</td
+            <td class="puntos">${puntos} pts</td
+            <td class="premio">$${premios.toFixed(2)}</td
+            </tr>`;
         });
         
         html += '</tbody></table></div>';
@@ -540,7 +552,11 @@ async function loadRankingPorJornada(jornadaId) {
             const posicion = j.posicion === 1 ? '🥇' : (j.posicion === 2 ? '🥈' : (j.posicion === 3 ? '🥉' : `#${j.posicion}`));
             const premio = Number(j.premio || 0);
             
-            html += `<tr><td class="posicion">${posicion}</td><td>${j.username}</td><td class="puntos">${j.puntos} pts</td><td class="premio">$${premio.toFixed(2)}</td></tr>`;
+            html += `<tr><td class="posicion">${posicion}</td
+            <td>${j.username}</td
+            <td class="puntos">${j.puntos} pts</td
+            <td class="premio">$${premio.toFixed(2)}</td
+            </tr>`;
         });
         
         html += '</tbody></table></div>';
