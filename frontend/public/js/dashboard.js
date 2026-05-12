@@ -1,5 +1,4 @@
 // ========== DASHBOARD.JS ==========
-import { API_BASE, WS_URL } from './config.js';
 
 let socket = null;
 let currentUser = null;
@@ -39,7 +38,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function connectWebSocket(token) {
     try {
-        socket = io(WS_URL, {
+        const wsUrl = window.location.origin.replace('http', 'ws');
+        socket = io(wsUrl, {
             query: { token },
             transports: ['websocket', 'polling']
         });
@@ -69,7 +69,7 @@ function connectWebSocket(token) {
 
 async function loadJornadas() {
     try {
-        const response = await fetch(`${API_BASE}/jornadas/activas`);
+        const response = await fetch('/api/jornadas/activas');
         const result = await response.json();
         
         if (result.success && result.data) {
@@ -77,6 +77,8 @@ async function loadJornadas() {
             console.log('Jornadas cargadas:', jornadas.length);
             
             const container = document.getElementById('jornadasContainer');
+            
+            if (!container) return;
             
             if (jornadas.length === 0) {
                 container.innerHTML = '<p>No hay jornadas activas en este momento.</p>';
@@ -88,7 +90,7 @@ async function loadJornadas() {
                     <h3>${jornada.name}</h3>
                     <p>Cierre: ${new Date(jornada.closing_date).toLocaleString()}</p>
                     <p>Costo por ticket: $${jornada.ticket_cost}</p>
-                    <p>Premio total: $${jornada.total_prize_pool}</p>
+                    <p>Premio total: $${jornada.total_prize_pool || 0}</p>
                     <button onclick="apostar(${jornada.id})">Apostar</button>
                 </div>
             `).join('');
@@ -100,35 +102,33 @@ async function loadJornadas() {
 
 async function loadRanking() {
     try {
-        const response = await fetch(`${API_BASE}/ranking/global`);
+        const response = await fetch('/api/ranking/global');
         const result = await response.json();
         
         if (result.success && result.data) {
             const ranking = result.data;
             const container = document.getElementById('rankingContainer');
             
+            if (!container) return;
+            
             if (ranking.length === 0) {
                 container.innerHTML = '<p>Aún no hay ranking disponible.</p>';
                 return;
             }
             
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr><th>Posición</th><th>Usuario</th><th>Puntos</th><th>Premio</th></tr>
-                    </thead>
-                    <tbody>
-                        ${ranking.map((user, index) => `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td>${user.username}</td>
-                                <td>${user.total_puntos || 0}</td>
-                                <td>$${user.total_premio || 0}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
+            let html = '<table><thead><tr><th>Posición</th><th>Usuario</th><th>Puntos</th><th>Premio</th></tr></thead><tbody>';
+            ranking.forEach((user, index) => {
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${user.username}</td>
+                        <td>${user.total_puntos || 0}</td>
+                        <td>$${user.total_premio || 0}</td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
         }
     } catch (error) {
         console.error('Error cargando ranking:', error);
@@ -136,12 +136,11 @@ async function loadRanking() {
 }
 
 window.apostar = async (jornadaId) => {
-    // Implementar lógica de apuesta
     const numeros = prompt('Ingresa tus números separados por comas (ej: 1,3,5,7)');
     if (!numeros) return;
     
     try {
-        const response = await fetch(`${API_BASE}/apuestas`, {
+        const response = await fetch('/api/apuestas', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -157,7 +156,7 @@ window.apostar = async (jornadaId) => {
         
         if (result.success) {
             alert('¡Apuesta registrada con éxito!');
-            loadJornadas();
+            await loadJornadas();
         } else {
             alert(result.message || 'Error al registrar apuesta');
         }
@@ -168,22 +167,28 @@ window.apostar = async (jornadaId) => {
 };
 
 function setupEventListeners() {
-    document.getElementById('logoutBtn')?.addEventListener('click', () => {
-        localStorage.clear();
-        window.location.href = 'index.html';
-    });
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        });
+    }
     
-    document.getElementById('recargarBtn')?.addEventListener('click', () => {
-        const monto = prompt('¿Cuánto deseas recargar?', '10');
-        if (monto && !isNaN(monto)) {
-            solicitarRecarga(parseFloat(monto));
-        }
-    });
+    const recargarBtn = document.getElementById('recargarBtn');
+    if (recargarBtn) {
+        recargarBtn.addEventListener('click', () => {
+            const monto = prompt('¿Cuánto deseas recargar?', '10');
+            if (monto && !isNaN(monto)) {
+                solicitarRecarga(parseFloat(monto));
+            }
+        });
+    }
 }
 
 async function solicitarRecarga(monto) {
     try {
-        const response = await fetch(`${API_BASE}/recargar/solicitar`, {
+        const response = await fetch('/api/recargar/solicitar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
