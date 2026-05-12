@@ -37,6 +37,7 @@ app.set('io', io);
 
 // Middlewares
 app.use(cors());
+app.use(express.static(path.join(__dirname, "../frontend/public")));
 app.use(express.json());
 
 // Servir archivos estáticos del frontend
@@ -66,6 +67,7 @@ app.get('/', (req, res) => {
 
 // Ruta para verificar estado
 app.get('/health', (req, res) => {
+app.get("/", (req, res) => { res.sendFile(path.join(__dirname, "../frontend/public/index.html")); });
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
