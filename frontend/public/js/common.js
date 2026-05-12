@@ -71,27 +71,28 @@ const initSocket = () => {
     console.log('📥 Recarga recibida:', data);
     
     // Asegurar que amount sea número
-    let amount = data.amount;
-    if (typeof amount === 'string') {
-      amount = parseFloat(amount);
-    }
+    let amount = typeof data.amount === 'number' ? data.amount : Number(data.amount);
     
     if (isNaN(amount) || amount <= 0) {
-      console.error('❌ Amount inválido:', amount);
+      console.error('❌ Amount inválido:', data.amount);
       showToast('Error: Monto de recarga inválido', 'error');
       return;
     }
     
-    showToast(`Recarga de $${amount.toFixed(2)} aprobada`, 'success');
-    
     const user = getUser();
     if (user) {
-      const balanceActual = typeof user.balance === 'number' ? user.balance : (parseFloat(user.balance) || 0);
-      user.balance = balanceActual + amount;
+      // Asegurar que balance sea número (convertir si viene como string)
+      let balanceActual = typeof user.balance === 'number' ? user.balance : Number(user.balance);
+      if (isNaN(balanceActual)) balanceActual = 0;
       
-      console.log('💰 Nuevo balance:', user.balance);
+      const nuevoBalance = balanceActual + amount;
       
+      console.log(`💰 Balance anterior: ${balanceActual}, Suma: ${amount}, Nuevo: ${nuevoBalance}`);
+      
+      user.balance = nuevoBalance;
       localStorage.setItem('pollaUser', JSON.stringify(user));
+      
+      showToast(`Recarga de $${amount.toFixed(2)} aprobada. Nuevo balance: $${nuevoBalance.toFixed(2)}`, 'success');
       
       const balanceEl = document.getElementById('userBalance');
       if (balanceEl) {
