@@ -10,6 +10,7 @@ const {
   getPendingReloads,
   approveRecarga,
   rejectRecarga,
+  deleteJornada,
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -24,6 +25,7 @@ router.put('/jornadas/:id/open', openJornada);      // ← AGREGADO: Abrir jorna
 router.put('/jornadas/:id/close', closeJornada);    // Cerrar jornada
 router.post('/jornadas/:id/resultados', loadResultados);  // Cargar resultados
 router.post('/jornadas/:id/liquidar', liquidarJornada);   // Liquidar jornada
+router.delete('/jornadas/:id', admin, deleteJornada);
 
 // ========== RUTAS DE RECARGAS ==========
 router.get('/recargas/pendientes', getPendingReloads);     // Obtener recargas pendientes

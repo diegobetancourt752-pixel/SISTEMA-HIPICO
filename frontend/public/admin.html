@@ -180,20 +180,28 @@
             </div>
           </div>
         </section>
-
-        <!-- Sección Gestionar Jornadas -->
-        <section id="manageSection" class="admin-section">
-          <div class="section-card">
-            <div class="card-header">
-              <h2><i class="fas fa-calendar-alt"></i> Gestionar Jornadas</h2>
-              <p>Administra el estado y resultados de cada jornada</p>
+<!-- Sección Gestionar Jornadas -->
+<section id="manageSection" class="admin-section">
+    <div class="section-card">
+        <div class="card-header">
+            <h2><i class="fas fa-calendar-alt"></i> Gestionar Jornadas</h2>
+            <p>Administra el estado y resultados de cada jornada</p>
+        </div>
+        <div class="card-body">
+            <!-- Filtros por estado -->
+            <div class="filters-bar">
+                <button class="filter-btn active" data-filter="all">Todas</button>
+                <button class="filter-btn" data-filter="upcoming">📅 Próximas</button>
+                <button class="filter-btn" data-filter="open">🎯 Activas</button>
+                <button class="filter-btn" data-filter="closed">🔒 Cerradas</button>
+                <button class="filter-btn" data-filter="finished">🏆 Finalizadas</button>
             </div>
-            <div class="card-body">
-              <div id="manageJornadasList" class="jornadas-grid">
+            <div id="manageJornadasList" class="jornadas-grid">
                 <div class="loading-spinner">Cargando jornadas...</div>
-              </div>
             </div>
-          </div>
+        </div>
+    </div>
+</section>
         </section>
 
         <!-- Sección Recargas Pendientes -->

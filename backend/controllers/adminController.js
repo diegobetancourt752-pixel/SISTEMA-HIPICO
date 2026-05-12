@@ -442,6 +442,36 @@ const rejectRecarga = async (req, res) => {
     return errorResponse(res, 'No se pudo rechazar la recarga', 500, error.message);
   }
 };
+// ========== ELIMINAR JORNADA ==========
+const deleteJornada = async (req, res) => {
+    const { id } = req.params;
+    const client = await db.pool.connect();
+    
+    try {
+        // Verificar si hay apuestas
+        const apuestasResult = await client.query(
+            'SELECT COUNT(*) FROM jugadas WHERE jornada_id = $1',
+            [id]
+        );
+        
+        if (parseInt(apuestasResult.rows[0].count) > 0) {
+            return errorResponse(res, 'No se puede eliminar una jornada con apuestas', 400);
+        }
+        
+        await client.query('BEGIN');
+        await client.query('DELETE FROM carreras WHERE jornada_id = $1', [id]);
+        await client.query('DELETE FROM jornadas WHERE id = $1', [id]);
+        await client.query('COMMIT');
+        
+        return successResponse(res, null, 'Jornada eliminada correctamente');
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error deleteJornada:', error);
+        return errorResponse(res, 'Error al eliminar la jornada', 500, error.message);
+    } finally {
+        client.release();
+    }
+};
 
 // ========== EXPORTAR ==========
 module.exports = {
@@ -454,4 +484,5 @@ module.exports = {
   getPendingReloads,
   approveRecarga,
   rejectRecarga,
+  deleteJornada,
 };
