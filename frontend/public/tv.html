@@ -261,26 +261,28 @@
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
     // ==================== 📺 EDITAR CANALES AQUÍ 📺 ====================
-    // Agrega o modifica canales en este array
-    // Formato:
-    // {
-    //   id: numero,
-    //   name: "Nombre del canal",
-    //   category: "Categoría",
-    //   url: "URL del stream",
-    //   type: "youtube" o "m3u8",
-    //   icon: "emoji"
-    // }
-    
-    const channels = [
-      {
-        id: 1,
-        name: "ESPN 3",
-        category: "Deportes",
-        url: "https://rm8zcvk3.fubohd.com/espn3/mono.m3u8?token=dc825a8320dec287b96603b4d6e1dcd474454fb8-9a-1778646617-1778628617",
-        type: "m3u8",
-        icon: "⚽"
-      }
+// Agrega o modifica canales en este array
+// Formato: { id, name, category, url, type, icon }
+
+const channels = [
+  {
+    id: 1,
+    name: "ESPN 3",
+    category: "Deportes",
+    url: "https://rm8zcvk3.fubohd.com/espn3/mono.m3u8?token=dc825a8320dec287b96603b4d6e1dcd474454fb8-9a-1778646617-1778628617",
+    type: "m3u8",
+    icon: "⚽"
+  },
+  {
+    id: 2,
+    name: "TNT SPORTS",
+    category: "DEPORTES",
+    url: "https://smjt9q.envivoslatam.org/tntsports/tracks-v1a1/mono.m3u8?ip=38.247.4.11&token=b1b20f3c9d51e4dcb2b338c09276587e27352f10-97-1778675461-1778621461",
+    type: "m3u8",
+    icon: "⚽"
+  }
+  // 👇 Agrega más canales aquí, separados por comas
+];
       // 👇 Agrega más canales aquí, separados por comas
       // {
       //   id: 2,
@@ -290,7 +292,7 @@
       //   type: "m3u8",
       //   icon: "📺"
       // }
-    ];
+    //];
     
     // ==================== FIN DE LA EDICIÓN ====================
     
