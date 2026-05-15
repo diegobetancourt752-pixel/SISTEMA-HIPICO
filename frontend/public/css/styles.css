@@ -1652,3 +1652,117 @@ body {
     outline: none;
     border-color: #2ecc71;
 }
+/* ========== ESTILOS ESPECÍFICOS PARA HISTORIAL ========== */
+.historial-table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.historial-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.historial-table th {
+    background: #0f1117;
+    padding: 14px 12px;
+    text-align: left;
+    color: #8a8f9e;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+}
+
+.historial-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.historial-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Barras de progreso */
+.progress-bar-container {
+    width: 100%;
+    background: #2a2d35;
+    border-radius: 10px;
+    margin-top: 6px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 4px;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+/* Badges de estado */
+.status-badge-won {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-badge-lost {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-badge-pending {
+    background: rgba(243, 156, 18, 0.15);
+    color: #f39c12;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-badge-partial {
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Aciertos destacados */
+.aciertos-full {
+    color: #2ecc71;
+    font-weight: 800;
+}
+
+.aciertos-partial {
+    color: #f39c12;
+    font-weight: 800;
+}
+
+.aciertos-none {
+    color: #e74c3c;
+    font-weight: 800;
+}
