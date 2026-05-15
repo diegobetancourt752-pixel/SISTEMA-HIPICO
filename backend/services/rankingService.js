@@ -1,21 +1,16 @@
-// ========== RANKING SERVICE CON CACHÉ REDIS ==========
-
 const db = require('../config/db');
 const { getRedisClient } = require('../config/redis');
 
-const CACHE_TTL = 60; // 60 segundos (1 minuto)
+const CACHE_TTL = 60;
 
-// Obtener ranking global
 async function getRankingGlobal() {
     const redisClient = getRedisClient();
     const cacheKey = 'ranking:global';
     
-    // Intentar obtener desde Redis
     if (redisClient && redisClient.isReady) {
         try {
             const cached = await redisClient.get(cacheKey);
             if (cached) {
-                console.log('📦 Ranking global desde caché');
                 return JSON.parse(cached);
             }
         } catch (err) {
@@ -23,9 +18,6 @@ async function getRankingGlobal() {
         }
     }
     
-    console.log('📊 Consultando ranking global desde BD');
-    
-    // Consultar base de datos
     const query = `
         SELECT u.id, u.username, 
                COALESCE(SUM(r.puntos), 0) as total_puntos,
@@ -42,7 +34,6 @@ async function getRankingGlobal() {
     const result = await db.query(query);
     const ranking = result.rows;
     
-    // Guardar en Redis
     if (redisClient && redisClient.isReady) {
         try {
             await redisClient.setEx(cacheKey, CACHE_TTL, JSON.stringify(ranking));
@@ -54,7 +45,6 @@ async function getRankingGlobal() {
     return ranking;
 }
 
-// Obtener ranking por jornada
 async function getRankingByJornada(jornadaId) {
     const redisClient = getRedisClient();
     const cacheKey = `ranking:jornada:${jornadaId}`;
@@ -63,15 +53,12 @@ async function getRankingByJornada(jornadaId) {
         try {
             const cached = await redisClient.get(cacheKey);
             if (cached) {
-                console.log(`📦 Ranking jornada ${jornadaId} desde caché`);
                 return JSON.parse(cached);
             }
         } catch (err) {
             console.error('Redis error:', err.message);
         }
     }
-    
-    console.log(`📊 Consultando ranking jornada ${jornadaId} desde BD`);
     
     const query = `
         SELECT u.id, u.username, COALESCE(r.puntos, 0) as puntos,
@@ -98,7 +85,6 @@ async function getRankingByJornada(jornadaId) {
     return ranking;
 }
 
-// Invalidar caché
 async function invalidateRankingCache(jornadaId = null) {
     const redisClient = getRedisClient();
     if (!redisClient || !redisClient.isReady) return;
@@ -108,7 +94,6 @@ async function invalidateRankingCache(jornadaId = null) {
         if (jornadaId) {
             await redisClient.del(`ranking:jornada:${jornadaId}`);
         }
-        console.log('🗑️ Caché de ranking invalidada');
     } catch (err) {
         console.error('Redis invalidate error:', err.message);
     }
