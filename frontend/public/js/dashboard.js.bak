@@ -1,4 +1,6 @@
-// ========== DASHBOARD.JS - COMPLETO CON RANKING DE NÚMEROS JUGADOS ==========
+// ========== DASHBOARD.JS - COMPLETO Y CORREGIDO ==========
+// NOTA: Las funciones formatBalance, showToast, apiFetch, getToken, getUser, 
+// saveSession, clearSession, initSocket ya están definidas en common.js
 
 let selectedJornada = null;
 let currentSelections = {};
@@ -33,12 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof initSocket === 'function') initSocket();
 });
 
-// ========== WEBSOCKET ==========
+// ========== WEBSOCKET CORREGIDO ==========
 (function initWebSocket() {
     const authToken = localStorage.getItem('pollaToken');
     const currentUser = JSON.parse(localStorage.getItem('pollaUser') || '{}');
     
     if (authToken && currentUser.id && !window.socket) {
+        // Usar la URL actual del navegador, no localhost
         const wsUrl = window.location.origin.replace('http', 'ws');
         console.log('Conectando WebSocket a:', wsUrl);
         
@@ -57,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof showToast === 'function') showToast(`Recarga de $${data.amount} aprobada`, 'success');
             
             const userData = JSON.parse(localStorage.getItem('pollaUser') || '{}');
-            userData.balance = (userData.balance || 0) + Number(data.amount);
+            userData.balance = (userData.balance || 0) + data.amount;
             localStorage.setItem('pollaUser', JSON.stringify(userData));
             
             const balanceEl = document.getElementById('userBalance');
@@ -251,18 +254,13 @@ async function openApuestaModal(jornada) {
         const modalJornadaInfo = document.getElementById('modalJornadaInfo');
         
         if (modalTitle) modalTitle.textContent = jornada.name;
-        const costoJornada = Number(jornada.cost_per_bet || jornada.ticket_cost || 5);
-        if (modalTotalCost) modalTotalCost.textContent = costoJornada;
-        
-        const closingDate = new Date(jornada.closing_date || jornada.close_date);
-        const fechaCierre = closingDate.toLocaleString();
-        const pozoJornada = Number(jornada.total_prize_pool || 0);
+        if (modalTotalCost) modalTotalCost.textContent = jornada.cost_per_bet || jornada.ticket_cost;
         
         if (modalJornadaInfo) {
             modalJornadaInfo.innerHTML = `
-                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Cierre</span><span class="modal-jornada-value">${fechaCierre}</span></div>
-                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Costo por jugada</span><span class="modal-jornada-value">$${costoJornada.toFixed(2)}</span></div>
-                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Pozo acumulado</span><span class="modal-jornada-value">$${pozoJornada.toFixed(2)}</span></div>
+                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Cierre</span><span class="modal-jornada-value">${fechaFormateada}</span></div>
+                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Costo por jugada</span><span class="modal-jornada-value">$${costo.toFixed(2)}</span></div>
+                <div class="modal-jornada-info-row"><span class="modal-jornada-label">Pozo acumulado</span><span class="modal-jornada-value">$${pozo.toFixed(2)}</span></div>
             `;
         }
         
@@ -368,18 +366,7 @@ function closeModal() {
     currentSelections = {};
 }
 
-// ========== ESCAPE HTML ==========
-function escapeHtml(text) {
-    if (!text) return '';
-    return String(text).replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-// ========== HISTORIAL CON ACIERTOS ==========
+// ========== HISTORIAL ==========
 async function loadHistorial() {
     const container = document.getElementById('historialContainer');
     if (!container) return;
@@ -390,100 +377,35 @@ async function loadHistorial() {
             headers: { 'x-auth-token': token }
         });
         const response = await res.json();
-        let jugadas = [];
-        
-        if (response.data && Array.isArray(response.data.jugadas)) {
-            jugadas = response.data.jugadas;
-        } else if (response.jugadas && Array.isArray(response.jugadas)) {
-            jugadas = response.jugadas;
-        } else if (Array.isArray(response)) {
-            jugadas = response;
-        }
-        
-        console.log('Historial cargado:', jugadas.length);
+        const jugadas = response.data?.jugadas || response.jugadas || [];
         
         if (jugadas.length === 0) {
-            container.innerHTML = '<div class="empty-state">No tienes jugadas registradas. Realiza tu primera apuesta!</div>';
+            container.innerHTML = '<div class="empty-state">No tienes jugadas registradas.</div>';
             return;
         }
         
-        let html = `
-            <div class="historial-table-container">
-                <table class="historial-table">
-                    <thead>
-                        <tr>
-                            <th>Jornada</th>
-                            <th>Selecciones</th>
-                            <th>Aciertos</th>
-                            <th>Costo</th>
-                            <th>Estado</th>
-                            <th>Premio</th>
-                            <th>Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
+        let html = '<div class="historial-table-container"><table class="historial-table"><thead><tr><th>Jornada</th><th>Selecciones</th><th>Costo</th><th>Estado</th><th>Premio</th><th>Fecha</th></tr></thead><tbody>';
         
         for (const j of jugadas) {
             const selections = Array.isArray(j.selections) ? j.selections.join(' - ') : (j.selections || '-');
             const costo = Number(j.cost || 0).toFixed(2);
             const premio = Number(j.prize || 0).toFixed(2);
-            
-            const aciertos = j.aciertos || 0;
-            const totalValidas = j.total_validas || 5;
-            const porcentajeAciertos = Math.round((aciertos / totalValidas) * 100);
-            
-            let statusText = '';
-            let statusColor = '';
+            let statusText = '', statusColor = '';
             
             if (j.status === 'won') {
-                statusText = '🏆 Ganó';
+                statusText = 'Ganó';
                 statusColor = '#2ecc71';
             } else if (j.status === 'lost') {
-                statusText = '❌ Perdió';
+                statusText = 'Perdió';
                 statusColor = '#e74c3c';
-            } else if (j.status === 'pending' && aciertos > 0) {
-                statusText = `⏳ ${aciertos}/${totalValidas} aciertos - Pendiente`;
-                statusColor = '#3498db';
             } else {
-                statusText = '⏳ Pendiente';
+                statusText = 'Pendiente';
                 statusColor = '#f39c12';
             }
             
-            let barraAciertos = '';
-            if (aciertos > 0) {
-                barraAciertos = `
-                    <div style="width:100%; background:#2a2d35; border-radius:10px; margin-top:5px; overflow:hidden;">
-                        <div style="width:${porcentajeAciertos}%; background:${statusColor}; height:4px; border-radius:10px;"></div>
-                    </div>
-                `;
-            }
+            const fecha = new Date(j.created_at).toLocaleString();
             
-            let fecha = '-';
-            if (j.created_at) {
-                try {
-                    const fechaObj = new Date(j.created_at);
-                    if (!isNaN(fechaObj.getTime())) {
-                        fecha = fechaObj.toLocaleString();
-                    }
-                } catch(e) {}
-            }
-            
-            html += `
-                <tr>
-                    <td><strong>${escapeHtml(j.jornada_name || j.jornada?.name || '-')}</strong></td>
-                    <td style="font-family:monospace; font-size:13px;">${escapeHtml(selections)}</td
-                    <td style="min-width:100px;">
-                        <span style="font-weight:700; font-size:16px;">${aciertos}/${totalValidas}</span>
-                        <span style="color:#8a8f9e; font-size:11px;"> (${porcentajeAciertos}%)</span>
-                        ${barraAciertos}
-                    </td
-                    <td>$${costo}</td
-                    <td style="color:${statusColor}; font-weight:600;">${statusText}</td
-                    <td style="color:#2ecc71; font-weight:700;">$${premio}</td
-                    <td style="font-size:12px; color:#8a8f9e;">${fecha}</td
-                </tr>
-            `;
+            html += `<tr><td>${j.jornada_name || '-'}</td><td>${selections}</td><td>$${costo}</td><td style="color:${statusColor};">${statusText}</td><td>$${premio}</td><td>${fecha}</td></tr>`;
         }
         
         html += '</tbody></table></div>';
@@ -540,39 +462,30 @@ function setupRecharge() {
     });
 }
 
-// ========== RANKING GLOBAL ==========
+// ========== RANKING ==========
 async function loadRankingGlobal() {
     const container = document.getElementById('rankingGlobalContainer');
     if (!container) return;
-    
     container.innerHTML = '<div class="loading-spinner">Cargando ranking global...</div>';
     
     try {
         const res = await fetch('/api/ranking/global');
         const response = await res.json();
+        const ranking = response.data || response.ranking || [];
         
-        let ranking = [];
-        if (response.data && Array.isArray(response.data)) {
-            ranking = response.data;
-        } else if (response.ranking && Array.isArray(response.ranking)) {
-            ranking = response.ranking;
-        } else if (Array.isArray(response)) {
-            ranking = response;
-        }
-        
-        if (!ranking || ranking.length === 0) {
+        if (ranking.length === 0) {
             container.innerHTML = '<div class="empty-state">Aún no hay datos de ranking.</div>';
             return;
         }
         
         let html = '<div class="ranking-table-wrapper"><table class="ranking-table"><thead><tr><th>Posición</th><th>Jugador</th><th>Puntos</th><th>Premios</th></tr></thead><tbody>';
         
-        ranking.forEach((j, index) => {
-            const posicion = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `#${index + 1}`));
+        ranking.forEach(j => {
+            const posicion = j.posicion === 1 ? '🥇' : (j.posicion === 2 ? '🥈' : (j.posicion === 3 ? '🥉' : `#${j.posicion}`));
             const puntos = Number(j.total_puntos || j.puntos || 0);
             const premios = Number(j.total_premios || j.premio || 0);
             
-            html += `<tr><td class="posicion">${posicion}</td><td>${escapeHtml(j.username || j.user_name || 'Anónimo')}</td><td class="puntos">${puntos} pts</td><td class="premio">$${premios.toFixed(2)}</td></tr>`;
+            html += `<tr><td class="posicion">${posicion}</td><td>${j.username}</td><td class="puntos">${puntos} pts</td><td class="premio">$${premios.toFixed(2)}</td></tr>`;
         });
         
         html += '</tbody></table></div>';
@@ -594,7 +507,7 @@ async function loadJornadasParaRanking() {
         
         if (select) {
             let options = '<option value="">Selecciona una jornada</option>';
-            jornadas.forEach(j => { options += `<option value="${j.id}">${escapeHtml(j.name)}</option>`; });
+            jornadas.forEach(j => { options += `<option value="${j.id}">${j.name}</option>`; });
             select.innerHTML = options;
             select.addEventListener('change', (e) => {
                 if (e.target.value) {
@@ -606,104 +519,32 @@ async function loadJornadasParaRanking() {
     } catch (error) { console.error('Error loadJornadasParaRanking:', error); }
 }
 
-// ========== RANKING POR JORNADA CON NÚMEROS JUGADOS ==========
 async function loadRankingPorJornada(jornadaId) {
     const container = document.getElementById('rankingJornadaContainer');
     if (!container) return;
     container.innerHTML = '<div class="loading-spinner">Cargando ranking...</div>';
     
     try {
-        // Usar el endpoint que incluye las selecciones
-        const res = await fetch(`/api/ranking/jornada/${jornadaId}/con-selecciones`);
+        const res = await fetch(`/api/ranking/jornada/${jornadaId}`);
         const response = await res.json();
         const ranking = response.data || response.ranking || [];
-        
-        console.log('Ranking con selecciones:', ranking);
         
         if (ranking.length === 0) {
             container.innerHTML = '<div class="empty-state">No hay datos de ranking para esta jornada</div>';
             return;
         }
         
-        let html = `
-            <div class="ranking-table-wrapper">
-                <table class="ranking-table">
-                    <thead>
-                        <tr>
-                            <th>Posición</th>
-                            <th>Jugador</th>
-                            <th>Números Jugados</th>
-                            <th>Puntos</th>
-                            <th>Premio</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
+        let html = '<div class="ranking-table-wrapper"><table class="ranking-table"><thead><tr><th>Posición</th><th>Jugador</th><th>Puntos</th><th>Premio</th></tr></thead><tbody>';
         
-        for (const [index, j] of ranking.entries()) {
-            const posicion = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `#${index + 1}`));
-            const premio = Number(j.premio || j.apuesta_prize || 0);
+        ranking.forEach(j => {
+            const posicion = j.posicion === 1 ? '🥇' : (j.posicion === 2 ? '🥈' : (j.posicion === 3 ? '🥉' : `#${j.posicion}`));
+            const premio = Number(j.premio || 0);
             
-            // Formatear las selecciones (números jugados)
-            let seleccionesHtml = '-';
-            if (j.selections) {
-                let selectionsArray = [];
-                if (Array.isArray(j.selections)) {
-                    selectionsArray = j.selections;
-                } else if (typeof j.selections === 'object') {
-                    selectionsArray = Object.values(j.selections);
-                }
-                
-                if (selectionsArray.length > 0) {
-                    seleccionesHtml = selectionsArray.map(num => 
-                        `<span class="selection-number">${num}</span>`
-                    ).join(' ');
-                }
-            }
-            
-            html += `
-                <tr>
-                    <td class="posicion">${posicion}</td>
-                    <td><strong>${escapeHtml(j.username || j.user_name || 'Anónimo')}</strong></td>
-                    <td class="selecciones-cell">${seleccionesHtml}</td>
-                    <td class="puntos">${j.puntos || 0} pts</td>
-                    <td class="premio">$${premio.toFixed(2)}</td>
-                </tr>
-            `;
-        }
+            html += `<tr><td class="posicion">${posicion}</td><td>${j.username}</td><td class="puntos">${j.puntos} pts</td><td class="premio">$${premio.toFixed(2)}</td></tr>`;
+        });
         
-        html += `
-                    </tbody>
-                </table>
-            </div>
-        `;
-        
+        html += '</tbody></table></div>';
         container.innerHTML = html;
-        
-        // Agregar estilos para los números
-        if (!document.getElementById('rankingSelectionsStyles')) {
-            const style = document.createElement('style');
-            style.id = 'rankingSelectionsStyles';
-            style.textContent = `
-                .selecciones-cell { font-family: monospace; font-size: 14px; }
-                .selection-number {
-                    display: inline-block;
-                    background: linear-gradient(135deg, #1a1d25, #2a2d35);
-                    color: #2ecc71;
-                    font-weight: bold;
-                    padding: 4px 10px;
-                    border-radius: 12px;
-                    margin: 2px;
-                    min-width: 34px;
-                    text-align: center;
-                    font-size: 13px;
-                    border: 1px solid #2ecc7133;
-                }
-                .ranking-table td.selecciones-cell { max-width: 250px; white-space: normal; word-break: break-word; }
-            `;
-            document.head.appendChild(style);
-        }
-        
     } catch (error) {
         console.error('Error loadRankingPorJornada:', error);
         container.innerHTML = '<div class="empty-state error">Error al cargar ranking</div>';

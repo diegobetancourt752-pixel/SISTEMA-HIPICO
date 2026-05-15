@@ -23,4 +23,4 @@ async function initRedis() {
 
 function getRedisClient() { return redisClient; }
 
-module.exports = { initRedis, getRedisClient };
+module.exports = { initRedis, getRedisClient };|

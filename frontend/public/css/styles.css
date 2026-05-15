@@ -1494,3 +1494,161 @@ body {
     padding-top: 15px;
     border-top: 1px solid var(--border);
 }
+/* Agregar a style.css */
+.historial-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.historial-table th {
+    background: #0a0c10;
+    padding: 12px;
+    text-align: left;
+    color: #8a8f9e;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.historial-table td {
+    padding: 12px;
+    border-bottom: 1px solid #2a2d35;
+}
+
+.historial-table tr:hover {
+    background: rgba(255,255,255,0.03);
+}
+/* ========== ESTILOS PARA RANKING CON NÚMEROS JUGADOS ========== */
+
+/* Tabla de ranking */
+.ranking-table-wrapper {
+    overflow-x: auto;
+    margin-top: 16px;
+}
+
+.ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #1a1d25;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.ranking-table th {
+    background: #0f1117;
+    padding: 14px;
+    text-align: left;
+    color: #8a8f9e;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.ranking-table td {
+    padding: 14px;
+    border-bottom: 1px solid #2a2d35;
+}
+
+.ranking-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Columna de selecciones/números */
+.selecciones-cell {
+    font-family: monospace;
+    font-size: 14px;
+    max-width: 250px;
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* Badges de números jugados */
+.selection-number {
+    display: inline-block;
+    background: linear-gradient(135deg, #1a1d25, #2a2d35);
+    color: #2ecc71;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin: 2px;
+    min-width: 34px;
+    text-align: center;
+    font-size: 13px;
+    border: 1px solid #2ecc7133;
+}
+
+/* Posiciones */
+.posicion {
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.puntos, .premio {
+    font-weight: 600;
+}
+
+/* Secciones de ranking */
+.ranking-section {
+    margin-bottom: 32px;
+}
+
+.ranking-section h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #e2e8f0;
+}
+
+/* Tarjeta de mi posición */
+.mi-posicion-card {
+    background: linear-gradient(135deg, #1a1d25, #0f1117);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid #2ecc7133;
+}
+
+.mi-posicion-card h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.mi-posicion-stats {
+    display: flex;
+    gap: 24px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.mi-posicion-card .stat .stat-label {
+    font-size: 11px;
+    color: #8a8f9e;
+    text-transform: uppercase;
+}
+
+.mi-posicion-card .stat .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.mi-posicion-card .stat .stat-value.highlight {
+    color: #2ecc71;
+}
+
+/* Selector de jornadas */
+#rankingJornadaSelect {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px 16px;
+    background: #1a1d25;
+    border: 1px solid #2a2d35;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#rankingJornadaSelect:focus {
+    outline: none;
+    border-color: #2ecc71;
+}
