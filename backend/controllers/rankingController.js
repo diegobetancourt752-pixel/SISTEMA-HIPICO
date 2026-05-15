@@ -27,6 +27,43 @@ const getRanking = async (req, res) => {
     }
 };
 
+// Obtener ranking por jornada CON LAS SELECCIONES (números jugados)
+const getRankingWithSelections = async (req, res) => {
+    const { jornadaId } = req.params;
+    
+    try {
+        // Primero obtener el ranking de puntos
+        const ranking = await getRankingByJornada(jornadaId);
+        
+        // Para cada usuario en el ranking, obtener sus selecciones
+        for (let jugador of ranking) {
+            const jugadasQuery = `
+                SELECT selections, cost, status, prize, created_at
+                FROM jugadas
+                WHERE user_id = $1 AND jornada_id = $2
+                ORDER BY created_at DESC
+                LIMIT 1
+            `;
+            const result = await db.query(jugadasQuery, [jugador.id, jornadaId]);
+            
+            if (result.rows.length > 0) {
+                jugador.selections = result.rows[0].selections;
+                jugador.apuesta_status = result.rows[0].status;
+                jugador.apuesta_prize = Number(result.rows[0].prize);
+            } else {
+                jugador.selections = [];
+                jugador.apuesta_status = 'sin_apuesta';
+                jugador.apuesta_prize = 0;
+            }
+        }
+        
+        return successResponse(res, ranking, 'Ranking con selecciones obtenido');
+    } catch (error) {
+        console.error('Error getRankingWithSelections:', error);
+        return errorResponse(res, 'Error al obtener ranking con selecciones', 500, error.message);
+    }
+};
+
 // Obtener mi posición
 const getMiPosicion = async (req, res) => {
     if (!req.user || !req.user.id) {
@@ -61,4 +98,9 @@ const getMiPosicion = async (req, res) => {
     }
 };
 
-module.exports = { getRankingGlobal: getRankingGlobalController, getRanking, getMiPosicion };
+module.exports = { 
+    getRankingGlobal: getRankingGlobalController, 
+    getRanking, 
+    getMiPosicion,
+    getRankingWithSelections
+};
