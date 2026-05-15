@@ -1,4 +1,4 @@
-// ========== DASHBOARD.JS - VERSIÓN COMPLETA CORREGIDA ==========
+// ========== DASHBOARD.JS - COMPLETO CORREGIDO ==========
 
 let selectedJornada = null;
 let currentSelections = {};
@@ -379,7 +379,7 @@ function escapeHtml(text) {
     });
 }
 
-// ========== HISTORIAL CORREGIDO ==========
+// ========== HISTORIAL CORREGIDO (CON TABLA FUNCIONAL) ==========
 async function loadHistorial() {
     const container = document.getElementById('historialContainer');
     if (!container) return;
@@ -400,7 +400,7 @@ async function loadHistorial() {
             jugadas = response;
         }
         
-        console.log('Historial cargado:', jugadas);
+        console.log('Historial cargado:', jugadas.length);
         
         if (jugadas.length === 0) {
             container.innerHTML = '<div class="empty-state">No tienes jugadas registradas. Realiza tu primera apuesta!</div>';
@@ -446,7 +446,10 @@ async function loadHistorial() {
             const totalValidas = j.total_validas || 3;
             const porcentaje = totalValidas > 0 ? Math.round((aciertos / totalValidas) * 100) : 0;
             
-            let statusText = '', statusColor = '', statusIcon = '';
+            let statusText = '';
+            let statusColor = '';
+            let statusIcon = '';
+            
             if (aciertos === totalValidas && totalValidas > 0) {
                 statusText = 'GANÓ TODAS';
                 statusColor = '#2ecc71';
@@ -478,17 +481,17 @@ async function loadHistorial() {
             html += `
                 <tr>
                     <td><strong>${escapeHtml(j.jornada_name || j.jornada?.name || '-')}</strong></td>
-                    <td style="font-family:monospace;">${escapeHtml(selections)}</td
-                    <td><span style="font-weight:800; color:${statusColor};">${aciertos}/${totalValidas}</span> <span style="color:#8a8f9e;">(${porcentaje}%)</span></td
-                    <td>$${costo}</td
-                    <td style="color:${statusColor};">${statusIcon} ${statusText}</td
-                    <td style="color:#2ecc71;">$${premio}</td
-                    <td style="font-size:12px; color:#8a8f9e;">${fecha}</td
+                    <td style="font-family:monospace;">${escapeHtml(selections)}</td>
+                    <td><span style="font-weight:800; color:${statusColor};">${aciertos}/${totalValidas}</span> <span style="color:#8a8f9e;">(${porcentaje}%)</span></td>
+                    <td>$${costo}</td>
+                    <td style="color:${statusColor};">${statusIcon} ${statusText}</td>
+                    <td style="color:#2ecc71;">$${premio}</td>
+                    <td style="font-size:12px; color:#8a8f9e;">${fecha}</td>
                 </tr>
             `;
         }
         
-        html += '</tbody></table></div>';
+        html += '</tbody>\\n</table>\\n</div>';
         container.innerHTML = html;
         
     } catch (error) {
@@ -578,7 +581,7 @@ async function loadRankingGlobal() {
             html += `<tr><td class="posicion">${posicion}</td><td>${escapeHtml(j.username || j.user_name || 'Anónimo')}</td><td class="puntos">${puntos} pts</td><td class="premio">$${premios.toFixed(2)}</td></tr>`;
         });
         
-        html += '</tbody>}</div>';
+        html += '</tbody></table></div>';
         container.innerHTML = html;
     } catch (error) {
         console.error('Error loadRankingGlobal:', error);
@@ -609,6 +612,7 @@ async function loadJornadasParaRanking() {
     } catch (error) { console.error('Error loadJornadasParaRanking:', error); }
 }
 
+// ========== RANKING POR JORNADA CON NÚMEROS JUGADOS ==========
 async function loadRankingPorJornada(jornadaId) {
     const container = document.getElementById('rankingJornadaContainer');
     if (!container) return;
@@ -646,13 +650,13 @@ async function loadRankingPorJornada(jornadaId) {
             html += `<tr><td class="posicion">${posicion}</td><td><strong>${escapeHtml(j.username || j.user_name || 'Anónimo')}</strong></td><td class="selecciones-cell">${seleccionesHtml}</td><td class="puntos">${j.puntos || 0} pts</td><td class="premio">$${premio.toFixed(2)}</td></tr>`;
         }
         
-        html += '</tbody>}</div>';
+        html += '</tbody></table></div>';
         container.innerHTML = html;
         
         if (!document.getElementById('rankingSelectionsStyles')) {
             const style = document.createElement('style');
             style.id = 'rankingSelectionsStyles';
-            style.textContent = `.selection-number{display:inline-block;background:linear-gradient(135deg,#1a1d25,#2a2d35);color:#2ecc71;font-weight:bold;padding:4px 10px;border-radius:12px;margin:2px;min-width:34px;text-align:center;font-size:13px;border:1px solid #2ecc7133;}`;
+            style.textContent = '.selecciones-cell{font-family:monospace;font-size:14px;}.selection-number{display:inline-block;background:linear-gradient(135deg,#1a1d25,#2a2d35);color:#2ecc71;font-weight:bold;padding:4px 10px;border-radius:12px;margin:2px;min-width:34px;text-align:center;font-size:13px;border:1px solid #2ecc7133;}';
             document.head.appendChild(style);
         }
         
@@ -678,7 +682,7 @@ async function loadMiPosicion(jornadaId) {
             return;
         }
         
-        container.innerHTML = `<div class="mi-posicion-card"><h3>🎯 Tu posición en esta jornada</h3><div class="mi-posicion-stats"><div class="stat"><span class="stat-label">Posición</span><span class="stat-value">#${miPos.posicion}</span></div><div class="stat"><span class="stat-label">Puntos</span><span class="stat-value highlight">${miPos.puntos} pts</span></div><div class="stat"><span class="stat-label">Premio</span><span class="stat-value">$${Number(miPos.premio || 0).toFixed(2)}</span></div></div></div>`;
+        container.innerHTML = '<div class="mi-posicion-card"><h3>🎯 Tu posición en esta jornada</h3><div class="mi-posicion-stats"><div class="stat"><span class="stat-label">Posición</span><span class="stat-value">#' + miPos.posicion + '</span></div><div class="stat"><span class="stat-label">Puntos</span><span class="stat-value highlight">' + miPos.puntos + ' pts</span></div><div class="stat"><span class="stat-label">Premio</span><span class="stat-value">$' + Number(miPos.premio || 0).toFixed(2) + '</span></div></div></div>';
     } catch (error) {
         console.error('Error loadMiPosicion:', error);
         container.innerHTML = '';
